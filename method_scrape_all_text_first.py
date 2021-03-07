@@ -37,8 +37,8 @@ def error(s):
     errors.append(time+' '+s)
     print('>>> '+time+s)
 
-# Modify ticket list for reruns
-# ticker_list = ticker_list[1000:1050]
+# Modify ticket list for reruns/tests
+ticker_list = ticker_list[800:900]
 
 # PAGENAME_data functions create col,val vals
 def summary_data(ticker):
@@ -170,6 +170,7 @@ def performance_data(ticker):
 # variables for dataframe, error file and progression monitoring
 columns=['Previous Close', 'YTD Return', 'Expense Ratio (net)', 'Category', 'Last Cap Gain', 'Morningstar Rating', 'Morningstar Risk Rating', 'Net Assets', 'Beta (5Y Monthly)', 'Yield', '5y Average Return', 'Holdings Turnover', 'Last Dividend', 'Average for Category', 'Inception Date', 'Category', 'Fund Family', 'Net Assets', 'YTD Return', 'Yield', 'Morningstar Rating', 'Inception Date', 'Last Dividend', 'Last Cap Gain', 'Holdings Turnover', 'Average for Category', 'Annual Report Expense Ratio (net)_FUND', 'Annual Report Expense Ratio (net)_CAT', 'Prospectus Net Expense Ratio_FUND', 'Prospectus Net Expense Ratio_CAT', 'Prospectus Gross Expense Ratio_FUND', 'Prospectus Gross Expense Ratio_CAT', 'Max 12b1 Fee_FUND', 'Max 12b1 Fee_CAT', 'Max Front End Sales Load_FUND', 'Max Front End Sales Load_CAT', 'Max Deferred Sales Load_FUND', 'Max Deferred Sales Load_CAT', '3 Yr Expense Projection_FUND', '3 Yr Expense Projection_CAT', '5 Yr Expense Projection_FUND', '5 Yr Expense Projection_CAT', '10 Yr Expense Projection_FUND', '10 Yr Expense Projection_CAT', 'Morningstar Return Rating', 'Year-to-Date Return', '5-Year Average Return', 'Number of Years Up', 'Number of Years Down', 'Best 1 Yr Total Return (Feb 3, 2019)', 'Worst 1 Yr Total Return (Feb 3, 2019)', 'Best 3-Yr Total Return', 'Worst 3-Yr Total Return', 'YTD_FUND', 'YTD_CAT', '1-Month_FUND', '1-Month_CAT', '3-Month_FUND', '3-Month_CAT', '1-Year_FUND', '1-Year_CAT', '3-Year_FUND', '3-Year_CAT', '5-Year_FUND', '5-Year_CAT', '10-Year_FUND', '10-Year_CAT', 'Last Bull Market_FUND', 'Last Bull Market_CAT', 'Last Bear Market_FUND', 'Last Bear Market_CAT', '2020_FUND', '2020_CAT', '2019_FUND', '2019_CAT', '2018_FUND', '2018_CAT', '2017_FUND', '2017_CAT', '2020_Q1', '2020_Q2', '2020_Q3', '2020_Q4', '2020_Q1', '2020_Q2', '2020_Q3', '2020_Q4', '2020_Q1', '2020_Q2', '2020_Q3', '2020_Q4', '2020_Q1', '2020_Q2', '2020_Q3', '2020_Q4']
 row_dict = {}
+bad_rows = {}
 cnt = 0
 tot = len(ticker_list)
 
@@ -189,41 +190,36 @@ try:
         # full row of data
         f_row = []
         f_col = []
+
         # get rows, cols
-        try:
-            summary_col, summary_row = summary_data(ticker)
-        except:
-            error(ticker+' Summary-page extract failed')
-            print('cols and rows pulled:\n', summary_col, summary_row)
-        try:
-            profile_col, profile_row = profile_data(ticker)
-        except:
-            error(ticker+' Profile-page extract failed')
-            print('cols and rows pulled:\n', summary_col, summary_row)
-        try:
-            performance_col, performance_row = performance_data(ticker)
-        except:
-            error(ticker+' Performance-page extract failed')
-            print('cols and rows pulled:\n', summary_col, summary_row)
+        summary_col, summary_row = summary_data(ticker)
+        profile_col, profile_row = profile_data(ticker)
+        performance_col, performance_row = performance_data(ticker)
+
 
         f_row.extend(summary_row)
         f_row.extend(profile_row)
         f_row.extend(performance_row)
+
         f_col.extend(summary_col)
         f_col.extend(profile_col)
         f_col.extend(performance_col)
+
         if len(f_row) == len(columns):
             row_dict[ticker] = f_row
         else:
             time = str(datetime.now())
             error(ticker+' row rejected. Iteration '+str(cnt)+'. Row length '+str(len(f_row)))
+            bad_rows[ticker] = f_row
 except:
     print('\nERROR: Crawl Ended Unexpectedly ----------------------- \n')
     time = str(datetime.now())
     errors.append('Crawl Ended at '+time)
     pass
 
-mfs = pd.DataFrame.from_dict(row_dict, orient='index', columns=columns)
+# Create DataFrames
+mf = pd.DataFrame.from_dict(row_dict, orient='index', columns=columns)
+br = pd.DataFrame.from_dict(bad_rows, orient='index')
 
 # ch
 print('>>> rows collected = '+str(len(row_dict)))
@@ -239,12 +235,12 @@ timestamp = timestamp.replace(':','_')
 
 # save and print df.head()
 print('\n>>> saving Mutual_Funds.csv...\n>>> preview...\n')
-print(mfs.head())
-mfs_title = r'C:\Users\nuajd15\Documents\scrapers\mutualFunds\csvOut\Mutual_Funds_{}.csv'.format(timestamp)
-mfs.to_csv(mfs_title, index=False)
+print(mf.head())
+mf_title = r'C:\Users\nuajd15\Documents\scrapers\mutualFunds\csvOut\Mutual_Funds_{}.csv'.format(timestamp)
+mf.to_csv(mf_title, index=False)
 
 # print and write errors
-print('\n>>> saving Errors.csv...\n')
+print('\n>>> saving error log...\n')
 for i in (errors):
     print(i)
 
@@ -252,3 +248,8 @@ f = open(r'C:\Users\nuajd15\Documents\scrapers\mutualFunds\csvOut\test_errors.tx
 for i in errors:
   f.write(i+'\n')
 f.close()
+
+# saving bad rows collected
+bad_rows_title = r'C:\Users\nuajd15\Documents\scrapers\mutualFunds\csvOut\Bad_Rows_{}.csv'.format(timestamp)
+br.to_csv(bad_rows_title, index=False)
+
