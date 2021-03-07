@@ -37,8 +37,9 @@ def error(s):
     errors.append(time+' '+s)
     print('>>> '+time+s)
 
-# Modify ticket list for reruns/tests
-ticker_list = ticker_list[800:900]
+# Modify ticket list for reruns/tests. first_ticker to rember where started (see last_ticker)
+ticker_crawl = ticker_list[800:900]
+first_ticker = ticker_list.index(ticker_crawl[0])
 
 # PAGENAME_data functions create col,val vals
 def summary_data(ticker):
@@ -172,16 +173,12 @@ columns=['Previous Close', 'YTD Return', 'Expense Ratio (net)', 'Category', 'Las
 row_dict = {}
 bad_rows = {}
 cnt = 0
-tot = len(ticker_list)
+tot = len(ticker_crawl)
 
 print('\n\n '+chr(128376)+' beginning crawl\t\t',str(datetime.now()))
 
 try:
-    # Remember which range is scanned, for a retry
-    first_ticker = 1
-    last_ticker = cnt
-
-    for ticker in ticker_list:
+    for ticker in ticker_crawl:
         # progress
         cnt+=1
         pet = chr(128375)
@@ -214,30 +211,34 @@ try:
 except:
     print('\nERROR: Crawl Ended Unexpectedly ----------------------- \n')
     time = str(datetime.now())
-    errors.append('Crawl Ended at '+time)
+    error('Crawl Ended at '+time)
     pass
+
+# Remember where crawler ended (see first_ticker)
+last_ticker = cnt
 
 # Create DataFrames
 mf = pd.DataFrame.from_dict(row_dict, orient='index', columns=columns)
 br = pd.DataFrame.from_dict(bad_rows, orient='index')
 
-# ch
+# Conclusion
+print('>>> WEBCRAWL CONCLUDED')
 print('>>> rows collected = '+str(len(row_dict)))
 print('>>> tickers check  = '+str(cnt))
 print('--- Range of Funds Scanned - From Original Mutual Fund Full List')
-print('>>> Start = '+str(first_ticker))
-print('>>> Stop  = '+str(last_ticker))
+print('>>> Start = ' + str(first_ticker) + ' - ' + ticker_list[first_ticker])
+print('>>> Stop  = ' + str(last_ticker) + ' - ' + ticker_list[last_ticker])
 
 # timestamp for filenames
 time = str(datetime.now())
-timestamp = time[0:10]+':'+time[12:19]
+timestamp = time[0:10] + ':' + time[12:19]
 timestamp = timestamp.replace(':','_')
 
 # save and print df.head()
 print('\n>>> saving Mutual_Funds.csv...\n>>> preview...\n')
 print(mf.head())
 mf_title = r'C:\Users\nuajd15\Documents\scrapers\mutualFunds\csvOut\Mutual_Funds_{}.csv'.format(timestamp)
-mf.to_csv(mf_title, index=False)
+mf.to_csv(mf_title, index=True)
 
 # print and write errors
 print('\n>>> saving error log...\n')
