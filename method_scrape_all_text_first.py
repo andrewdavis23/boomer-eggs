@@ -221,7 +221,7 @@ last_ticker = cnt
 mf = pd.DataFrame.from_dict(row_dict, orient='index', columns=columns)
 br = pd.DataFrame.from_dict(bad_rows, orient='index')
 
-# Conclusion
+# conclusion
 print('>>> WEBCRAWL CONCLUDED')
 print('>>> rows collected = '+str(len(row_dict)))
 print('>>> tickers check  = '+str(cnt))
