@@ -1,7 +1,7 @@
 # boomer-eggs
 Yahoo Finance scrapper for mutual funds and etfs
 
-Mutual Fund Algorithim:
+Steps:
 1. Create list of mutual funds.  Each URL will be created from the mutual funds.  Each mutual funds has several webpages.  On each webpage are several data tables.
 2. Define one function per webpage
 - Define each data table per webpage
